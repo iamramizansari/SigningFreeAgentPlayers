@@ -12,7 +12,7 @@ namespace SigningFreeAgentPlayers
         {
 
             Player[,] p = CreatePlayers(); // get Set of Players Created by helper Function.
-            FreeAgentPlayers(p, 2, 2, 5); // needs to create p
+            FreeAgentPlayers(p, 2, 2, 5); // needs to create players if chaning this
             Console.ReadLine();
         }
 
@@ -24,10 +24,10 @@ namespace SigningFreeAgentPlayers
             // p21 p22 on 2nd Position
 
             Player p11, p12, p21, p22; 
-            p11 = new Player("Ramiz", 1,2);
-            p12 = new Player("shanza", 1, 1);
-            p21 = new Player("ali", 1, 1);
-            p22 = new Player("rayyan", 1, 1);
+            p11 = new Player("Ramiz", 2,2);  // players name, Vorp , Cost
+            p12 = new Player("shanza", 2, 1);
+            p21 = new Player("ali", 3, 1);
+            p22 = new Player("rayyan", 3, 1);
             Player[,] p = { {null,null,null},{null,p11,p12},{null,p21,p22}}; // ZERO INDEX NEEDs TO BE EMPTY
             return p;
         }
@@ -35,20 +35,21 @@ namespace SigningFreeAgentPlayers
 
         static public void CostVorpOfAllPlayers(Player[,] p,int N,int P) {
 
-            p_ = new Player[N+1, P+1]; 
+            p_ = new Player[N+1, P+1]; // Create new Helper table
             
             for (int i = 1; i < p.GetLength(1); i++) {
                 int sum = 0;
                 int max = Int32.MinValue;
                 for (int j = 1;  j < p.GetLength(0); j++) {
                    p_[i, j] = new Player();
+                    p_[i, j].name = p[i, j].name;
                     sum = sum + p[i, j].cost;
                    if (p[i, j].vorp > max) {
                         max = p[i,j].vorp;
-                       
+                        p_[i, j].vorp = max;// max vorp at "0 to i" position
+
                     }
-                    p_[i, j].vorp = max;// max vorp at i position
-                    p_[i, j].cost = sum; // total cost at i position
+                    p_[i, j].cost = sum; // total cost at "0 to i" position
                 }
                
             }
@@ -59,15 +60,16 @@ namespace SigningFreeAgentPlayers
 
             //p = set of players, N = number of players , P = players availble for each positions , X = Total Budget.
             int[,] v = new int[N+1,X+1]; // Create new table (2d array) for mainting max for at price cap
+            int[,] c = new int[N + 1, X + 1]; // Create new table (2d array) for mainting max for at price cap
             int[,] who = new int[N+1, X+1];  // Create new table (2d array) for mainting min cost for at price cap
-            CostVorpOfAllPlayers(p,N,P);
-
-
+            CostVorpOfAllPlayers(p,N,P); 
+            int Xo = X;    //create copy of original budget
+             X = X / N;    // divide budget equally for all positions
             for (int x =0; x<=X; x++) {
                 who[N, x] = 0;
                 v[N, x] = Int32.MinValue;
                 for (int k = 1; k <= P; k++) {
-                   if (p_[N, k].cost <= X && p_[N, k].vorp > v[N, x])
+                   if (p_[N, k].cost <= X && p_[N, k].vorp >= v[N, x] )
                     {
                         v[N, x] = p[N, k].vorp;
                         who[N, x] = k;
@@ -80,7 +82,6 @@ namespace SigningFreeAgentPlayers
                     v[i, x] = v[i+1, x];
                     who[i, x] = 0;
                     for (int k = 1; k <= P; k++) {
-                        Console.WriteLine("p "+i+","+k+" c:"+p_[i,k].cost);
                         if (p_[i, k].cost <= x && v[i + 1, x - p_[i, k].cost] + p_[i, k].vorp > v[i, x]) {
                             v[i, x] = v[i + 1, x - p_[i, k].cost] + p_[i, k].vorp;
                             who[i, x] = k;
@@ -91,19 +92,24 @@ namespace SigningFreeAgentPlayers
                 }
             }
 
-            Console.WriteLine("The maximum value of VORP is " + v[1, X]);
+            Console.WriteLine("Position Available:" + N + " Players on Each position: "+P);
+            Console.WriteLine("The maximum ammount can be used is " + Xo);
+          
             int amt = X;
             for (int i = 1; i<=N; i++){
                 int k = who[i, amt];
                 if (k != 0)
                 {
-                    Console.WriteLine("sign player " + p[i, k]);
+                    Console.WriteLine("Signed player for position ["+i+"] " + p_[i, k]);
                     amt = amt - p_[i, k].cost;
                 }
                    
             }
 
             Console.WriteLine("The total money spent is "+ (X - amt));
+            Console.WriteLine("The total VORP of selected players is " + v[1, X]);
+
+
         }
 
         static public void printArray(int[,] arr)
